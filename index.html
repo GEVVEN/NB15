@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>几个字汽修15班 - 评价墙</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="stars" id="stars"></div>
+    
+    <div class="container">
+        <header class="header">
+            <h1 class="main-title">几个字汽修15班</h1>
+            <p class="subtitle">✨ 留下你的评价 ✨</p>
+        </header>
+
+        <div class="form-section">
+            <div class="form-row">
+                <label class="form-label">选择等级：</label>
+                <select id="levelSelect" class="level-select">
+                    <option value="😊">😊 行</option>
+                    <option value="👍">👍 可以</option>
+                    <option value="✨">✨ 很好</option>
+                    <option value="🌟">🌟 非常好</option>
+                    <option value="💯">💯 十分好</option>
+                    <option value="🚀">🚀 宇宙大爆炸的好</option>
+                </select>
+            </div>
+            
+            <div class="form-row">
+                <textarea 
+                    id="messageInput" 
+                    class="message-input" 
+                    placeholder="请输入你的评价..."
+                    maxlength="200"
+                    rows="3"
+                ></textarea>
+            </div>
+            
+            <div class="form-footer">
+                <span class="char-count" id="charCount">0/200</span>
+                <button id="submitBtn" class="submit-btn">发送评价</button>
+            </div>
+        </div>
+
+        <div class="reviews-section">
+            <div class="section-header">
+                <h2>📋 评价墙</h2>
+                <span class="review-count" id="reviewCount">共 0 条评价</span>
+            </div>
+            <div class="reviews-list" id="reviewsList">
+                <div class="empty-state">
+                    <p>还没有评价，快来抢沙发吧！🎉</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
