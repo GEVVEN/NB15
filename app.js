@@ -9,9 +9,62 @@ let supabase = null;
 let reviews = [];
 let pollingInterval = null;
 
+// 默认评价数据（30条炫彩娱乐评价）
+const DEFAULT_REVIEWS = [
+    { level: "🚀", message: "汽修十五班牛逼666，发动机都能修出火箭推进器！", time: "刚刚" },
+    { level: "💯", message: "这班谁上的谁发财，修车技术比F1赛车手还厉害", time: "1分钟前" },
+    { level: "🌟", message: "十五班的同学个个都是技术流，扳手一挥天下无敌", time: "2分钟前" },
+    { level: "🚀", message: "别人修车靠经验，我们修车靠实力，十五班永远的神！", time: "3分钟前" },
+    { level: "✨", message: "汽修十五班：修得了奔驰宝马，还能修好你的人生", time: "5分钟前" },
+    { level: "💯", message: "这技术，这水平，这班不上对不起自己的良心", time: "8分钟前" },
+    { level: "🚀", message: "十五班一出，谁与争锋？汽修界的天花板！", time: "10分钟前" },
+    { level: "🌟", message: "师傅说我们是最强的，我信了，真的不信不行", time: "12分钟前" },
+    { level: "✨", message: "修车不行的汽修工不是好司机，十五班全体达标", time: "15分钟前" },
+    { level: "💯", message: "以后修车就找十五班，保证让你心服口服", time: "18分钟前" },
+    { level: "🚀", message: "十五班的同学，左手扳手右手图纸，气质这一块拿捏得死死的", time: "20分钟前" },
+    { level: "🌟", message: "这手艺，这态度，这班风，不得不服", time: "25分钟前" },
+    { level: "✨", message: "汽修十五班：让每一辆车都重新焕发第二春", time: "30分钟前" },
+    { level: "💯", message: "别人家的孩子修车，我家孩子修的是梦想", time: "35分钟前" },
+    { level: "🚀", message: "十五班不一般，修车修到国外去，丰田本田都得服", time: "40分钟前" },
+    { level: "🌟", message: "这手艺，这水平，这态度，满分120我们考220", time: "45分钟前" },
+    { level: "✨", message: "汽修十五班，yyds，永远不会过时！", time: "50分钟前" },
+    { level: "💯", message: "老师傅看了都点赞，说这帮孩子有前途", time: "55分钟前" },
+    { level: "🚀", message: "十五班的同学，修车的时候最帅，没有之一", time: "1小时前" },
+    { level: "🌟", message: "这技术，这专业，这态度，没谁了，牛！", time: "1小时前" },
+    { level: "✨", message: "汽修十五班：不是所有汽修班都叫十五班", time: "2小时前" },
+    { level: "💯", message: "同学们太给力了，修车修出了国际水平", time: "2小时前" },
+    { level: "🚀", message: "这手艺，这效率，这配合，简直是汽修界的梦之队", time: "3小时前" },
+    { level: "🌟", message: "十五班一出，谁与争锋？修车界的就是硬气", time: "3小时前" },
+    { level: "✨", message: "修车找十五班，保你满意笑开颜", time: "4小时前" },
+    { level: "💯", message: "这技术流，这操作秀，我直接给跪了", time: "4小时前" },
+    { level: "🚀", message: "汽修十五班，未来的汽车大师都在这里！", time: "5小时前" },
+    { level: "🌟", message: "同学们太猛了，修车修出了黑科技的感觉", time: "6小时前" },
+    { level: "✨", message: "十五班的同学，个个都是技术大牛，未来可期", time: "8小时前" },
+    { level: "💯", message: "这班，这技术，这氛围，绝了绝了绝了！", time: "10小时前" }
+];
+
+// 创建飘落花瓣效果
+function createPetalParticles() {
+    const container = document.getElementById('petalsContainer');
+    if (!container) return;
+    const petalTypes = ['🌸', '🌺', '🌹', '💮', '🏵️', '✿'];
+    
+    for (let i = 0; i < 12; i++) {
+        const petal = document.createElement('div');
+        petal.className = 'petal';
+        petal.textContent = petalTypes[Math.floor(Math.random() * petalTypes.length)];
+        petal.style.left = Math.random() * 100 + '%';
+        petal.style.animationDuration = (Math.random() * 10 + 15) + 's';
+        petal.style.animationDelay = (Math.random() * 10) + 's';
+        petal.style.fontSize = (Math.random() * 15 + 15) + 'px';
+        container.appendChild(petal);
+    }
+}
+
 // 初始化
 async function init() {
-    createStars();
+    createPetalParticles();
+    setupLandingPage();
     setupEventListeners();
     
     // 尝试连接Supabase
@@ -24,6 +77,56 @@ async function init() {
         console.log('使用本地模式');
         loadLocalReviews();
     }
+}
+
+// 创建飘落花瓣效果
+function createFlowerParticles() {
+    const container = document.getElementById('flowerBg');
+    const petalTypes = ['🌸', '🌺', '🌹', '💮', '🏵️', '✿'];
+    
+    for (let i = 0; i < 15; i++) {
+        const petal = document.createElement('div');
+        petal.className = 'petal';
+        petal.textContent = petalTypes[Math.floor(Math.random() * petalTypes.length)];
+        petal.style.cssText = `
+            position: fixed;
+            top: -50px;
+            left: ${Math.random() * 100}%;
+            font-size: ${Math.random() * 20 + 15}px;
+            opacity: ${Math.random() * 0.3 + 0.1};
+            pointer-events: none;
+            z-index: 0;
+            animation: fall ${Math.random() * 10 + 15}s linear infinite;
+            animation-delay: ${Math.random() * 10}s;
+        `;
+        document.body.appendChild(petal);
+    }
+    
+    // 添加飘落动画
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes fall {
+            0% {
+                transform: translateY(0) rotate(0deg) translateX(0);
+                opacity: 0.3;
+            }
+            25% {
+                transform: translateY(25vh) rotate(90deg) translateX(30px);
+            }
+            50% {
+                transform: translateY(50vh) rotate(180deg) translateX(-20px);
+                opacity: 0.2;
+            }
+            75% {
+                transform: translateY(75vh) rotate(270deg) translateX(25px);
+            }
+            100% {
+                transform: translateY(105vh) rotate(360deg) translateX(0);
+                opacity: 0;
+            }
+        }
+    `;
+    document.head.appendChild(style);
 }
 
 // 创建星空背景
@@ -125,6 +228,33 @@ async function handleSubmit() {
     }
 }
 
+// 设置首页和进入按钮
+function setupLandingPage() {
+    const enterBtn = document.getElementById('enterBtn');
+    const landingPage = document.getElementById('landingPage');
+    const mainContent = document.getElementById('mainContent');
+    
+    enterBtn.addEventListener('click', () => {
+        landingPage.style.animation = 'fadeOut 0.5s ease forwards';
+        setTimeout(() => {
+            landingPage.style.display = 'none';
+            mainContent.style.display = 'block';
+            loadReviews();
+            startPolling();
+        }, 500);
+    });
+    
+    // 添加淡出动画
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; }
+        }
+    `;
+    document.head.appendChild(style);
+}
+
 // 加载评价
 async function loadReviews() {
     try {
@@ -137,7 +267,16 @@ async function loadReviews() {
             if (error) throw error;
             reviews = data || [];
         } else {
+            // 本地模式：如果localStorage为空，先加载默认评价
             reviews = getLocalReviews();
+            if (reviews.length === 0) {
+                reviews = DEFAULT_REVIEWS.map(r => ({
+                    level: r.level,
+                    message: r.message,
+                    created_at: new Date().toISOString()
+                }));
+                saveLocalReviews(reviews);
+            }
         }
         
         renderReviews();
@@ -234,8 +373,24 @@ function getLocalReviews() {
 }
 
 function loadLocalReviews() {
-    reviews = getLocalReviews();
+    const existing = getLocalReviews();
+    if (existing.length === 0) {
+        // 如果没有评价，加载默认评价
+        reviews = DEFAULT_REVIEWS.map(r => ({
+            level: r.level,
+            message: r.message,
+            created_at: new Date().toISOString()
+        }));
+        saveLocalReviews(reviews);
+    } else {
+        reviews = existing;
+    }
     renderReviews();
+}
+
+// 保存本地评价
+function saveLocalReviews(list) {
+    localStorage.setItem('reviews', JSON.stringify(list));
 }
 
 // 轮询更新
@@ -261,3 +416,8 @@ document.head.appendChild(style);
 
 // 启动应用
 init();
+
+// 调试：检查数据加载
+console.log('页面加载完成');
+console.log('DEFAULT_REVIEWS数量:', DEFAULT_REVIEWS.length);
+console.log('localStorage中reviews数量:', getLocalReviews().length);
