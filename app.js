@@ -1,11 +1,9 @@
-// 配置
+// 配置 - 纯本地存储模式
 const CONFIG = {
-    SUPABASE_URL: 'https://your-project.supabase.co',
-    SUPABASE_ANON_KEY: 'your-anon-key'
+    LOCAL_STORAGE_KEY: 'qiuxiu15_reviews'
 };
 
-// Supabase客户端
-let supabase = null;
+// 数据变量
 let reviews = [];
 let pollingInterval = null;
 
@@ -62,96 +60,45 @@ function createPetalParticles() {
 }
 
 // 初始化
-async function init() {
+function init() {
     createPetalParticles();
     setupLandingPage();
     setupEventListeners();
-    
-    // 尝试连接Supabase
-    try {
-        const supabaseModule = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
-        supabase = supabaseModule.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
-        await loadReviews();
-        startPolling();
-    } catch (error) {
-        console.log('使用本地模式');
-        loadLocalReviews();
-    }
+    loadReviews();
 }
 
-// 创建飘落花瓣效果
-function createFlowerParticles() {
-    const container = document.getElementById('flowerBg');
-    const petalTypes = ['🌸', '🌺', '🌹', '💮', '🏵️', '✿'];
+// 设置首页和进入按钮
+function setupLandingPage() {
+    const enterBtn = document.getElementById('enterBtn');
+    const landingPage = document.getElementById('landingPage');
+    const mainContent = document.getElementById('mainContent');
     
-    for (let i = 0; i < 15; i++) {
-        const petal = document.createElement('div');
-        petal.className = 'petal';
-        petal.textContent = petalTypes[Math.floor(Math.random() * petalTypes.length)];
-        petal.style.cssText = `
-            position: fixed;
-            top: -50px;
-            left: ${Math.random() * 100}%;
-            font-size: ${Math.random() * 20 + 15}px;
-            opacity: ${Math.random() * 0.3 + 0.1};
-            pointer-events: none;
-            z-index: 0;
-            animation: fall ${Math.random() * 10 + 15}s linear infinite;
-            animation-delay: ${Math.random() * 10}s;
-        `;
-        document.body.appendChild(petal);
-    }
+    enterBtn.addEventListener('click', () => {
+        landingPage.style.animation = 'fadeOut 0.5s ease forwards';
+        setTimeout(() => {
+            landingPage.style.display = 'none';
+            mainContent.style.display = 'block';
+            loadReviews();
+            startPolling();
+        }, 500);
+    });
     
-    // 添加飘落动画
+    // 添加淡出动画
     const style = document.createElement('style');
     style.textContent = `
-        @keyframes fall {
-            0% {
-                transform: translateY(0) rotate(0deg) translateX(0);
-                opacity: 0.3;
-            }
-            25% {
-                transform: translateY(25vh) rotate(90deg) translateX(30px);
-            }
-            50% {
-                transform: translateY(50vh) rotate(180deg) translateX(-20px);
-                opacity: 0.2;
-            }
-            75% {
-                transform: translateY(75vh) rotate(270deg) translateX(25px);
-            }
-            100% {
-                transform: translateY(105vh) rotate(360deg) translateX(0);
-                opacity: 0;
-            }
+        @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; }
         }
     `;
     document.head.appendChild(style);
-}
-
-// 创建星空背景
-function createStars() {
-    const starsContainer = document.getElementById('stars');
-    const starCount = window.innerWidth < 768 ? 50 : 100;
-    
-    for (let i = 0; i < starCount; i++) {
-        const star = document.createElement('div');
-        star.className = 'star';
-        star.style.left = Math.random() * 100 + '%';
-        star.style.top = Math.random() * 100 + '%';
-        star.style.setProperty('--duration', (Math.random() * 3 + 2) + 's');
-        star.style.animationDelay = Math.random() * 5 + 's';
-        starsContainer.appendChild(star);
-    }
 }
 
 // 设置事件监听
 function setupEventListeners() {
     const messageInput = document.getElementById('messageInput');
     const charCount = document.getElementById('charCount');
-    const submitBtn = document.getElementById('submitBtn');
     
-    // 输入字数统计
     messageInput.addEventListener('input', () => {
         const len = messageInput.value.length;
         charCount.textContent = `${len}/200`;
@@ -164,7 +111,7 @@ function setupEventListeners() {
     });
     
     // 提交评价
-    submitBtn.addEventListener('click', handleSubmit);
+    document.getElementById('submitBtn').addEventListener('click', handleSubmit);
     
     // 回车提交
     messageInput.addEventListener('keypress', (e) => {
@@ -195,28 +142,15 @@ async function handleSubmit() {
     submitBtn.innerHTML = '<span class="loading"></span>';
     
     try {
-        if (supabase) {
-            // 保存到Supabase
-            const { error } = await supabase
-                .from('reviews')
-                .insert([{
-                    level: level,
-                    message: message,
-                    created_at: new Date().toISOString()
-                }]);
-            
-            if (error) throw error;
-        } else {
-            // 保存到本地
-            saveLocalReview({ level, message });
-        }
+        // 保存到本地
+        saveLocalReview({ level, message });
         
         // 清空输入
         messageInput.value = '';
         document.getElementById('charCount').textContent = '0/200';
         
         // 刷新评价列表
-        await loadReviews();
+        loadReviews();
         
         showMessage('评价发送成功！', 'success');
     } catch (error) {
@@ -228,55 +162,19 @@ async function handleSubmit() {
     }
 }
 
-// 设置首页和进入按钮
-function setupLandingPage() {
-    const enterBtn = document.getElementById('enterBtn');
-    const landingPage = document.getElementById('landingPage');
-    const mainContent = document.getElementById('mainContent');
-    
-    enterBtn.addEventListener('click', () => {
-        landingPage.style.animation = 'fadeOut 0.5s ease forwards';
-        setTimeout(() => {
-            landingPage.style.display = 'none';
-            mainContent.style.display = 'block';
-            loadReviews();
-            startPolling();
-        }, 500);
-    });
-    
-    // 添加淡出动画
-    const style = document.createElement('style');
-    style.textContent = `
-        @keyframes fadeOut {
-            from { opacity: 1; }
-            to { opacity: 0; }
-        }
-    `;
-    document.head.appendChild(style);
-}
-
 // 加载评价
-async function loadReviews() {
+function loadReviews() {
     try {
-        if (supabase) {
-            const { data, error } = await supabase
-                .from('reviews')
-                .select('*')
-                .order('created_at', { ascending: false });
-            
-            if (error) throw error;
-            reviews = data || [];
-        } else {
-            // 本地模式：如果localStorage为空，先加载默认评价
-            reviews = getLocalReviews();
-            if (reviews.length === 0) {
-                reviews = DEFAULT_REVIEWS.map(r => ({
-                    level: r.level,
-                    message: r.message,
-                    created_at: new Date().toISOString()
-                }));
-                saveLocalReviews(reviews);
-            }
+        reviews = getLocalReviews();
+        
+        // 如果本地没有数据，加载默认评价
+        if (reviews.length === 0) {
+            reviews = DEFAULT_REVIEWS.map(r => ({
+                level: r.level,
+                message: r.message,
+                created_at: new Date().toISOString()
+            }));
+            saveLocalReviews(reviews);
         }
         
         renderReviews();
@@ -333,9 +231,8 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
-// 显示消息
+// 显示消息提示
 function showMessage(text, type = 'info') {
-    // 创建提示元素
     const toast = document.createElement('div');
     toast.style.cssText = `
         position: fixed;
@@ -343,9 +240,9 @@ function showMessage(text, type = 'info') {
         left: 50%;
         transform: translateX(-50%);
         padding: 12px 24px;
-        border-radius: 8px;
-        font-size: 0.95rem;
-        z-index: 1000;
+        border-radius: 25px;
+        font-size: 14px;
+        z-index: 9999;
         animation: slideDown 0.3s ease;
         ${type === 'success' ? 'background: #48dbfb; color: #0a0a1a;' : 
           type === 'error' ? 'background: #ff6b6b; color: white;' : 
@@ -364,60 +261,30 @@ function showMessage(text, type = 'info') {
 function saveLocalReview(review) {
     const existing = getLocalReviews();
     existing.unshift(review);
-    localStorage.setItem('reviews', JSON.stringify(existing));
+    localStorage.setItem(CONFIG.LOCAL_STORAGE_KEY, JSON.stringify(existing));
 }
 
 function getLocalReviews() {
-    const data = localStorage.getItem('reviews');
+    const data = localStorage.getItem(CONFIG.LOCAL_STORAGE_KEY);
     return data ? JSON.parse(data) : [];
 }
 
-function loadLocalReviews() {
-    const existing = getLocalReviews();
-    if (existing.length === 0) {
-        // 如果没有评价，加载默认评价
-        reviews = DEFAULT_REVIEWS.map(r => ({
-            level: r.level,
-            message: r.message,
-            created_at: new Date().toISOString()
-        }));
-        saveLocalReviews(reviews);
-    } else {
-        reviews = existing;
-    }
-    renderReviews();
-}
-
-// 保存本地评价
+// 保存所有评价
 function saveLocalReviews(list) {
-    localStorage.setItem('reviews', JSON.stringify(list));
+    localStorage.setItem(CONFIG.LOCAL_STORAGE_KEY, JSON.stringify(list));
 }
 
 // 轮询更新
 function startPolling() {
     pollingInterval = setInterval(() => {
         loadReviews();
-    }, 3000); // 每3秒检查一次新评价
+    }, 3000);
 }
-
-// 添加动画样式
-const style = document.createElement('style');
-style.textContent = `
-    @keyframes slideDown {
-        from { transform: translate(-50%, -100%); opacity: 0; }
-        to { transform: translate(-50%, 0); opacity: 1; }
-    }
-    @keyframes slideUp {
-        from { transform: translate(-50%, 0); opacity: 1; }
-        to { transform: translate(-50%, -100%); opacity: 0; }
-    }
-`;
-document.head.appendChild(style);
 
 // 启动应用
 init();
 
-// 调试：检查数据加载
+// 调试输出
 console.log('页面加载完成');
-console.log('DEFAULT_REVIEWS数量:', DEFAULT_REVIEWS.length);
-console.log('localStorage中reviews数量:', getLocalReviews().length);
+console.log('默认评价数量:', DEFAULT_REVIEWS.length);
+console.log('当前存储评价数量:', getLocalReviews().length);
